@@ -16,8 +16,8 @@
 
 int main()
 {
-	//UseExamLinkedList();
-	UseExamHash();
+	UseExamLinkedList();
+	//UseExamHash();
 
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtDumpMemoryLeaks();

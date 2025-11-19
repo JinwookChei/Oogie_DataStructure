@@ -33,10 +33,19 @@ void UseExamLinkedList()
 	list.Print();
 	std::cout << '\n' << '\n';
 	
-	list.Clean();
+	
+	int* searchedItem = nullptr;
+	if (false == list.Search((void**)&searchedItem, pNode4->pItem_))
+	{
+		__debugbreak();
+	}
+
+	std::cout << "Res : " << *searchedItem << '\n';
+
+	//list.Clean();
 	//list.Remove(pNode1);
 	//list.Remove(pNode2);
-	list.Print();
+	//list.Print();
 
 	
 	delete pNode4->pItem_; 

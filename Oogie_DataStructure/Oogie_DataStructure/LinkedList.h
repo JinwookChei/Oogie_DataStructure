@@ -32,7 +32,7 @@ public:
 	}
 	~LinkedList()
 	{
-		Clean();
+		//Clean();
 	}
 
 	void PushFront(LINK_NODE* pNode)
@@ -93,12 +93,20 @@ public:
 		++count_;
 	}
 
-	void Clean()
+	bool Search(void** ppOutItem, void* pItem)
 	{
-		while (pHead_)
+		LINK_NODE* pIter = pHead_;
+		while (pIter)
 		{
-			Remove(pHead_);
+			if (pIter->pItem_ == pItem)
+			{
+				*ppOutItem = pIter->pItem_;
+				return true;
+			}
+			pIter = pIter->next_;
 		}
+
+		return false;
 	}
 
 	void Remove(LINK_NODE* pNode)
@@ -143,6 +151,14 @@ public:
 
 		pNode->pOwner_ = nullptr;
 		--count_;
+	}
+
+	void Clean()
+	{
+		while (pHead_)
+		{
+			Remove(pHead_);
+		}
 	}
 
 	void Print()
