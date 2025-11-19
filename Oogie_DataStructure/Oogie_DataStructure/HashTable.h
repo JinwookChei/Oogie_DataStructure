@@ -8,8 +8,9 @@ struct HASH_BUCKET
 
 struct HASH_ENTRY
 {
+	unsigned int hash_;
 	LINK_NODE linkNode_;
-	void* pValue_ = nullptr;
+	void* pData_ = nullptr;
 	unsigned int keySize_;
 	char keyData[1];
 };
@@ -19,10 +20,7 @@ class HashTableIterator
 	friend class HashTable;
 
 public:
-	HashTableIterator()
-	{
-
-	}
+	HashTableIterator() = delete;
 
 	HashTableIterator(HASH_BUCKET* pBucketTable, LINK_NODE* pCurLinkNode, unsigned int maxBucketCount, unsigned int curBucketCount)
 		: pBucketTable_(pBucketTable)
@@ -109,7 +107,7 @@ public:
 
 		HASH_ENTRY* pHashEntry = (HASH_ENTRY*)pCurLinkNode_->pItem_;
 
-		return (void*)pHashEntry->pValue_;
+		return (void*)pHashEntry->pData_;
 	}
 
 private:
@@ -139,12 +137,14 @@ public:
 
 	~HashTable()
 	{
-		Clean();
+		Clear();
+
+		delete[] pBucketTable_;
 	}
 
-	void* Insert(void* pValue, const void* pKeyData, unsigned int keySize)
+	void* Insert(void* pData, const void* pKeyData, unsigned int keySize)
 	{
-		if (nullptr == pValue || nullptr == pKeyData || 0 == keySize || keySize > maxKeySize_)
+		if (nullptr == pData || nullptr == pKeyData || 0 == keySize || keySize > maxKeySize_)
 		{
 			__debugbreak();
 			return nullptr;
@@ -158,15 +158,16 @@ public:
 			return nullptr;
 		}
 
+		unsigned int hash = CreateKey(pKeyData, keySize, maxBucketCount_);
+		pNewEntry->hash_ = hash;
 		pNewEntry->linkNode_.pItem_ = pNewEntry;
 		pNewEntry->linkNode_.prev_ = nullptr;
 		pNewEntry->linkNode_.next_ = nullptr;
 		pNewEntry->linkNode_.pOwner_ = nullptr;
-		pNewEntry->pValue_ = pValue;
+		pNewEntry->pData_ = pData;
 		pNewEntry->keySize_ = keySize;
 		memcpy(pNewEntry->keyData, pKeyData, keySize);
 
-		unsigned int hash = CreateKey(pKeyData, keySize, maxBucketCount_);
 		pBucketTable_[hash].chain_.PushBack(&pNewEntry->linkNode_);
 		++entryCount_;
 
@@ -201,7 +202,7 @@ public:
 				continue;
 			}
 
-			ppOutSearchedList[searchedCount] = pEntry->pValue_;
+			ppOutSearchedList[searchedCount] = pEntry->pData_;
 			++searchedCount;
 
 			if (searchedCount >= countToSearch)
@@ -210,15 +211,8 @@ public:
 			}
 		}
 
-		if (searchedCount == 0)
-		{
-			ppOutSearchedList = nullptr;
-			pOutSearchedCount = 0;
-			return false;
-		}
-
 		*pOutSearchedCount = searchedCount;
-		return true;
+		return *pOutSearchedCount > 0;
 	}
 
 	void Delete(const void* pKeyData, unsigned int keySize)
@@ -235,7 +229,7 @@ public:
 		LINK_NODE* pCurNode = pBucketChain->pHead_;
 		while (pCurNode)
 		{
-			LINK_NODE* pTmpNode = pCurNode;
+			LINK_NODE pTmpNode = *pCurNode;
 			HASH_ENTRY* pEntry = (HASH_ENTRY*)pCurNode->pItem_;
 
 			if (pEntry->keySize_ != keySize)
@@ -250,15 +244,27 @@ public:
 			}
 
 			pBucketChain->Remove(pCurNode);
-			pCurNode = pTmpNode->next_;
+			pCurNode = pTmpNode.next_;
 			delete pEntry;
 			--entryCount_;
 		}
 	}
 
-	void Delete(void* pHashHandle)
+	void Delete(void** pHashHandle)
 	{
+		if (nullptr == *pHashHandle)
+		{
+			__debugbreak();
+			return;
+		}
 
+		HASH_ENTRY* pEntry = static_cast<HASH_ENTRY*>(*pHashHandle);
+		unsigned int hash = pEntry->hash_;
+		this->pBucketTable_[hash].chain_.Remove(&pEntry->linkNode_);
+		delete pEntry;
+		pEntry = nullptr;
+		*pHashHandle = nullptr;
+		--entryCount_;
 	}
 
 	void DebugPrint()
@@ -266,7 +272,23 @@ public:
 		for (HashTableIterator iter = begin(); iter != end(); ++iter)
 		{
 			HASH_ENTRY* pCurEntry = (HASH_ENTRY*)iter.pCurLinkNode_->pItem_;
-			std::cout << (int)*(int*)pCurEntry->pValue_ << '\n';
+			std::cout << (int)*(int*)pCurEntry->pData_ << '\n';
+		}
+	}
+
+	void Clear()
+	{
+		if (nullptr == pBucketTable_) 
+		{
+			__debugbreak();
+			return;
+		}
+
+		for (unsigned int n = 0; n < maxBucketCount_; ++n) {
+			while (pBucketTable_[n].chain_.pHead_) {
+				HASH_ENTRY* pEntry = (HASH_ENTRY*)pBucketTable_[n].chain_.pHead_->pItem_;
+				Delete((void**)&pEntry);
+			}
 		}
 	}
 
@@ -292,9 +314,6 @@ public:
 		return HashTableIterator(pBucketTable, pCurLinkNode, maxBucketCount_, curBucketCount);
 	}
 
-	HashTableIterator erase(HashTableIterator& iter)
-	{
-	}
 	HashTableIterator end()
 	{
 		return HashTableIterator(nullptr, nullptr, maxBucketCount_, maxBucketCount_);
@@ -337,11 +356,6 @@ private:
 		}
 
 		return keyData % bucketCount;
-	}
-
-	void Clean()
-	{
-
 	}
 
 	HASH_BUCKET* pBucketTable_;

@@ -38,5 +38,11 @@
     <ClInclude Include="HashTable.h">
       <Filter>Source Files\HashTable</Filter>
     </ClInclude>
+    <ClInclude Include="UseExamHash.h">
+      <Filter>Source Files\HashTable</Filter>
+    </ClInclude>
+    <ClInclude Include="UseExamLinkedList.h">
+      <Filter>Source Files\LinkedList</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
