@@ -101,12 +101,16 @@ public:
 
 	void* operator*()
 	{
-		if (nullptr == pCurLinkNode_ || nullptr == pCurLinkNode_->pItem_) {
+		if (nullptr == pCurLinkNode_ || nullptr == pCurLinkNode_->pItem_) 
+		{
 			return nullptr;
 		}
 
 		HASH_ENTRY* pHashEntry = (HASH_ENTRY*)pCurLinkNode_->pItem_;
-
+		if (nullptr == pHashEntry->pData_)
+		{
+			__debugbreak();
+		}
 		return (void*)pHashEntry->pData_;
 	}
 
@@ -245,25 +249,28 @@ public:
 
 			pBucketChain->Remove(pCurNode);
 			pCurNode = pTmpNode.next_;
-			delete pEntry;
+			
+			free(pEntry);
 			--entryCount_;
 		}
 	}
 
-	void Delete(void** pHashHandle)
+	void Delete(void* pHashHandle)
 	{
-		if (nullptr == *pHashHandle)
+		if (nullptr == pHashHandle)
 		{
 			__debugbreak();
 			return;
 		}
 
-		HASH_ENTRY* pEntry = static_cast<HASH_ENTRY*>(*pHashHandle);
+		HASH_ENTRY* pEntry = static_cast<HASH_ENTRY*>(pHashHandle);
 		unsigned int hash = pEntry->hash_;
 		this->pBucketTable_[hash].chain_.Remove(&pEntry->linkNode_);
-		delete pEntry;
+		
+
+		free(pEntry);
 		pEntry = nullptr;
-		*pHashHandle = nullptr;
+		pHashHandle = nullptr;
 		--entryCount_;
 	}
 
@@ -271,8 +278,8 @@ public:
 	{
 		for (HashTableIterator iter = begin(); iter != end(); ++iter)
 		{
-			HASH_ENTRY* pCurEntry = (HASH_ENTRY*)iter.pCurLinkNode_->pItem_;
-			std::cout << (int)*(int*)pCurEntry->pData_ << '\n';
+			//HASH_ENTRY* pCurEntry = (HASH_ENTRY*)iter.pCurLinkNode_->pItem_;
+			std::cout << (int)*(int*)*iter << '\n';
 		}
 	}
 
@@ -287,7 +294,7 @@ public:
 		for (unsigned int n = 0; n < maxBucketCount_; ++n) {
 			while (pBucketTable_[n].chain_.pHead_) {
 				HASH_ENTRY* pEntry = (HASH_ENTRY*)pBucketTable_[n].chain_.pHead_->pItem_;
-				Delete((void**)&pEntry);
+				Delete(pEntry);
 			}
 		}
 	}
@@ -317,6 +324,25 @@ public:
 	HashTableIterator end()
 	{
 		return HashTableIterator(nullptr, nullptr, maxBucketCount_, maxBucketCount_);
+	}
+
+	HashTableIterator Delete(HashTableIterator& iter)
+	{
+		auto next = iter;
+		++next;
+
+		void* searchHandle = nullptr;
+		if (nullptr != iter.pCurLinkNode_ && nullptr != iter.pCurLinkNode_->pItem_) 
+		{
+			searchHandle = iter.pCurLinkNode_->pItem_;
+		}
+
+		if (searchHandle) 
+		{
+			Delete(searchHandle);
+		}
+
+		return next;
 	}
 
 private:

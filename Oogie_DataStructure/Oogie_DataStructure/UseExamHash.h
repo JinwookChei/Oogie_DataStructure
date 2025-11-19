@@ -36,7 +36,6 @@ void UseExamHash()
 
 	HashTable table(16, 16);
 	void* hashHandle1 = table.Insert(value1, key1, sizeof(Key));
-	void* hashHandle11 = table.Insert(value2, key1, sizeof(Key));
 	void* hashHandle2 = table.Insert(value2, key2, sizeof(Key));
 	void* hashHandle3 = table.Insert(value3, key3, sizeof(Key));
 	void* hashHandle4 = table.Insert(value4, key4, sizeof(Key));
@@ -61,36 +60,50 @@ void UseExamHash()
 
 
 	// Delete()
-	table.Delete(key1, sizeof(Key));
-	table.Delete(key2, sizeof(Key));
-	table.Delete(key3, sizeof(Key));
-	table.Delete(key4, sizeof(Key));
-	table.Delete(key5, sizeof(Key));
+	//table.Delete(key1, sizeof(Key));
+	//table.Delete(key2, sizeof(Key));
+	//table.Delete(key3, sizeof(Key));
+	//table.Delete(key4, sizeof(Key));
+	//table.Delete(key5, sizeof(Key));
+	//table.DebugPrint();
+
+	//table.Delete(hashHandle1);
+	//table.Delete(hashHandle11);
+	//table.Delete(hashHandle2);
+	//table.Delete(hashHandle3);
+	//table.Delete(hashHandle4);
+	//table.Delete(hashHandle5);
+	//table.DebugPrint();
+
+
+	
+	for (HashTableIterator iter = table.begin(); iter != table.end();)
+	{
+		int* pCur = (int*)*iter;
+		iter = table.Delete(iter);
+		if(pCur != nullptr)
+		{
+			delete pCur;
+			pCur = nullptr;
+		}
+	}
 	table.DebugPrint();
-
-	/*table.Delete(&hashHandle1);
-	table.Delete(&hashHandle11);
-	table.Delete(&hashHandle2);
-	table.Delete(&hashHandle3);
-	table.Delete(&hashHandle4);
-	table.Delete(&hashHandle5);
-	table.DebugPrint();*/
-
+	
 	// Clear()
 	//table.Clear();
 	//table.DebugPrint();
 
 
-	delete value1;
-	value1 = nullptr;
-	delete value2;
-	value2 = nullptr;
-	delete value3;
-	value3 = nullptr;
-	delete value4;
-	value4 = nullptr;
-	delete value5;
-	value5 = nullptr;
+	//delete value1;
+	//value1 = nullptr;
+	//delete value2;
+	//value2 = nullptr;
+	//delete value3;
+	//value3 = nullptr;
+	//delete value4;
+	//value4 = nullptr;
+	//delete value5;
+	//value5 = nullptr;
 
 	delete key1;
 	key1 = nullptr;
