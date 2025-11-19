@@ -178,7 +178,7 @@ public:
 		return pNewEntry;
 	}
 
-	bool Search(void** ppOutSearchedList, int* pOutSearchedCount, unsigned int countToSearch, const void* pKeyData, unsigned int keySize)
+	bool Search(void** ppOutSearchedList, unsigned int* pOutSearchedCount, unsigned int countToSearch, const void* pKeyData, unsigned int keySize)
 	{
 		if (0 == keySize || 0 == countToSearch || nullptr == pKeyData)
 		{
